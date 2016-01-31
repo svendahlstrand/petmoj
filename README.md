@@ -34,6 +34,10 @@ TODO
 
 TODO
 
+## License
+
+Petmoj is released under the MIT License.
+
 ## Similar projects by others
 
 * [Rotary dial][1] by Mark Fickett
