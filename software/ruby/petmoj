@@ -3,24 +3,21 @@
 require 'rubyserial'
 require 'colored'
 
-port_name = Dir['/dev/tty.*'].find { |i| i.include? 'modem' } # crude
+def serial_port
+  @serial_port ||= begin
+    serial_port_name = Dir['/dev/tty.*'].find { |i| i.include? 'modem' }
+    Serial.new serial_port_name
+  end
+end
 
-sp = Serial.new(port_name)
-
-number = []
+@number = []
 
 puts "\nWelcome! Please dial a number.\n".green
 
 loop do
-  message = sp.gets
-
-  next unless message
-
-  message.chomp!
-
-  if message == 'h'
-    if number.length == 1
-      case number.first
+  if @number.any? && (Time.now - @last_digit_read_at) > 2
+    if @number.length == 1
+      case @number.first
       when 9
         puts '? I\'m going to bed.'.green
         `pmset sleepnow`
@@ -29,13 +26,18 @@ loop do
       end
     else
       puts '? I\'m dialing it for you right now.'.green
-      `open "tel://#{number.join}"`
+      `open "tel://#{@number.join}"`
     end
 
     puts "\n"
-    number = []
-  else
-    number.push message.to_i
-    putc message
+    @number = []
   end
+
+  digit = serial_port.read(1).chomp
+  next if digit.empty?
+
+  @number.push digit.to_i
+  putc digit
+
+  @last_digit_read_at = Time.now
 end
