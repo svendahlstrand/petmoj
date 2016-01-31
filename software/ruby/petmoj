@@ -1,0 +1,41 @@
+#!/usr/bin/env ruby
+
+require 'rubyserial'
+require 'colored'
+
+port_name = Dir['/dev/tty.*'].find { |i| i.include? 'modem' } # crude
+
+sp = Serial.new(port_name)
+
+number = []
+
+puts "\nWelcome! Please dial a number.\n".green
+
+loop do
+  message = sp.gets
+
+  next unless message
+
+  message.chomp!
+
+  if message == 'h'
+    if number.length == 1
+      case number.first
+      when 9
+        puts '? I\'m going to bed.'.green
+        `pmset sleepnow`
+      else
+        puts ' is an unknown shortcut. :('.red
+      end
+    else
+      puts '? I\'m dialing it for you right now.'.green
+      `open "tel://#{number.join}"`
+    end
+
+    puts "\n"
+    number = []
+  else
+    number.push message.to_i
+    putc message
+  end
+end
